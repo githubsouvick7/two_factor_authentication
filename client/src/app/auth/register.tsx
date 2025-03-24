@@ -1,165 +1,3 @@
-// "use client";
-
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-// import {
-//   Eye,
-//   EyeOff,
-//   KeyRound,
-//   LockKeyhole,
-//   Mail,
-//   Shield,
-//   User,
-//   UserPlus,
-// } from "lucide-react";
-// import { useState } from "react";
-
-// interface SignupPageProps {
-//   setState: React.Dispatch<React.SetStateAction<string>>;
-// }
-
-// const SignupPage: React.FC<SignupPageProps> = ({ setState }) => {
-//   const [showPassword, setShowPassword] = useState<boolean>(false);
-//   const [showConfirmPassword, setShowConfirmPassword] =
-//     useState<boolean>(false);
-
-//   const togglePasswordVisibility = (field: "password" | "confirm"): void => {
-//     if (field === "password") {
-//       setShowPassword((prev) => !prev);
-//     } else {
-//       setShowConfirmPassword((prev) => !prev);
-//     }
-//   };
-
-//   return (
-//     <div className="w-full flex items-center justify-center p-4">
-//       <div className="w-full max-w-md fade-in">
-//         <div className="glass rounded-3xl p-4 shadow-xl bg-white bg-opacity-80 backdrop-blur-sm">
-//           <div className="text-center mb-6">
-//             <div className="flex justify-center mb-4">
-//               <div className="p-3 bg-indigo-100 rounded-full">
-//                 <UserPlus className="h-10 w-10 text-indigo-600" />
-//               </div>
-//             </div>
-//             <h1 className="text-3xl font-bold mb-2">Create Account</h1>
-//             <p className="text-muted-foreground">
-//               Join our secure platform today
-//             </p>
-//           </div>
-//           <form className="space-y-4">
-//             <div className="relative">
-//               <User className="absolute left-3 top-4 h-4 w-4 text-muted-foreground" />
-//               <Input
-//                 type="text"
-//                 placeholder="Full Name"
-//                 className="pl-10 h-12 text-base"
-//                 required
-//               />
-//             </div>
-
-//             <div className="relative">
-//               <Mail className="absolute left-3 top-4 h-4 w-4 text-muted-foreground" />
-//               <Input
-//                 type="email"
-//                 placeholder="Email Address"
-//                 className="pl-10 h-12 text-base"
-//                 required
-//               />
-//             </div>
-
-//             <div className="relative">
-//               <LockKeyhole className="absolute left-3 top-4 h-4 w-4 text-muted-foreground" />
-//               <Input
-//                 type={showPassword ? "text" : "password"}
-//                 placeholder="Password"
-//                 className="pl-10 pr-10 h-12 text-base"
-//                 required
-//               />
-//               <button
-//                 type="button"
-//                 className="absolute right-3 top-4 text-muted-foreground hover:text-foreground transition-colors"
-//                 onClick={() => togglePasswordVisibility("password")}
-//               >
-//                 {showPassword ? (
-//                   <EyeOff className="h-4 w-4" />
-//                 ) : (
-//                   <Eye className="h-4 w-4" />
-//                 )}
-//               </button>
-//             </div>
-
-//             <div className="relative">
-//               <KeyRound className="absolute left-3 top-4 h-4 w-4 text-muted-foreground" />
-//               <Input
-//                 type={showConfirmPassword ? "text" : "password"}
-//                 placeholder="Confirm Password"
-//                 className="pl-10 pr-10 h-12 text-base"
-//                 required
-//               />
-//               <button
-//                 type="button"
-//                 className="absolute right-3 top-4 text-muted-foreground hover:text-foreground transition-colors"
-//                 onClick={() => togglePasswordVisibility("confirm")}
-//               >
-//                 {showConfirmPassword ? (
-//                   <EyeOff className="h-4 w-4" />
-//                 ) : (
-//                   <Eye className="h-4 w-4" />
-//                 )}
-//               </button>
-//             </div>
-
-//             <div className="flex items-start space-x-2">
-//               <input
-//                 type="checkbox"
-//                 id="terms"
-//                 className="mt-1 rounded text-primary focus:ring-primary"
-//                 required
-//               />
-//               <label htmlFor="terms" className="text-sm text-muted-foreground">
-//                 I agree to the{" "}
-//                 <a href="#" className="text-primary hover:underline">
-//                   Terms of Service
-//                 </a>{" "}
-//                 and{" "}
-//                 <a href="#" className="text-primary hover:underline">
-//                   Privacy Policy
-//                 </a>
-//               </label>
-//             </div>
-
-//             <Button
-//               type="submit"
-//               className="w-full text-base py-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all duration-300"
-//             >
-//               Create Secure Account
-//             </Button>
-
-//             <div className="text-center text-sm text-muted-foreground">
-//               Already have an account?{" "}
-//               <button
-//                 onClick={() => setState("login")}
-//                 className="font-medium text-primary hover:underline"
-//               >
-//                 Login
-//               </button>
-//             </div>
-//           </form>
-//         </div>
-
-//         <div className="mt-6 text-center">
-//           <p className="text-xs text-muted-foreground flex items-center justify-center">
-//             <Shield className="h-3 w-3 mr-1" />
-//             Protected by enterprise-grade security
-//           </p>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default SignupPage;
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -177,6 +15,8 @@ import {
 import { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 
 interface SignupPageProps {
   setState: React.Dispatch<React.SetStateAction<string>>;
@@ -186,6 +26,8 @@ const SignupPage: React.FC<SignupPageProps> = ({ setState }) => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] =
     useState<boolean>(false);
+
+  const router = useRouter();
 
   const togglePasswordVisibility = (field: "password" | "confirm"): void => {
     if (field === "password") {
@@ -224,7 +66,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ setState }) => {
 
   // Validation schema using Yup
   const validationSchema = Yup.object({
-    fullName: Yup.string().required("Full name is required"),
+    name: Yup.string().required("Full name is required"),
     email: Yup.string()
       .email("Invalid email address")
       .required("Email is required"),
@@ -244,28 +86,25 @@ const SignupPage: React.FC<SignupPageProps> = ({ setState }) => {
   // Initialize Formik
   const formik = useFormik({
     initialValues: {
-      fullName: "",
+      name: "",
       email: "",
       password: "",
       confirmPassword: "",
       terms: false,
     },
     validationSchema,
-    onSubmit: (values) => {
-      // Check if all required fields are entered
-      const allFieldsEntered =
-        values.fullName.trim() !== "" &&
-        values.email.trim() !== "" &&
-        values.password.trim() !== "" &&
-        values.confirmPassword.trim() !== "" &&
-        values.terms === true;
-
-      if (allFieldsEntered) {
-        console.log("Form submitted with values:", values);
-        alert("All requirements met! Account created successfully.");
-        // Handle form submission here
-      } else {
-        alert("Please fill in all required fields.");
+    onSubmit: async (values) => {
+      try {
+        const response = await axios.post(
+          "http://localhost:8000/api/auth/register",
+          values
+        );
+        if (response) {
+          localStorage.setItem("tempUserId", response.data.registrationId);
+          router.push("/auth/verify-otp");
+        }
+      } catch (error) {
+        console.log(error);
       }
     },
   });
@@ -290,18 +129,18 @@ const SignupPage: React.FC<SignupPageProps> = ({ setState }) => {
               <User className="absolute left-3 top-4 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
-                id="fullName"
-                name="fullName"
+                id="name"
+                name="name"
                 placeholder="Full Name"
                 className="pl-10 h-12 text-base"
-                value={formik.values.fullName}
+                value={formik.values.name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 required
               />
-              {formik.touched.fullName && formik.errors.fullName ? (
+              {formik.touched.name && formik.errors.name ? (
                 <div className="text-red-500 text-xs mt-1">
-                  {formik.errors.fullName}
+                  {formik.errors.name}
                 </div>
               ) : null}
             </div>
@@ -339,17 +178,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ setState }) => {
                 onBlur={formik.handleBlur}
                 required
               />
-              <button
-                type="button"
-                className="absolute right-3 top-4 text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => togglePasswordVisibility("password")}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
+
               {formik.touched.password && formik.errors.password ? (
                 <div className="text-red-500 text-xs mt-1">
                   {formik.errors.password}
@@ -442,7 +271,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ setState }) => {
 
             <Button
               type="submit"
-              className="w-full text-base py-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all duration-300"
+              className="w-full text-base py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-300"
             >
               Create Secure Account
             </Button>
