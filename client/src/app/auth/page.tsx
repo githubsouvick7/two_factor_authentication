@@ -60,7 +60,7 @@ import LoginPage from "./login";
 import SignupPage from "./register";
 
 const Page: React.FC = () => {
-  const [state, setState] = useState<string>("login");
+  const [state, setState] = useState<string>("signup");
 
   return (
     <div className="min-h-screen w-full flex bg-gradient-to-br from-purple-100 to-blue-50">
