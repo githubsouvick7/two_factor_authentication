@@ -96,7 +96,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ setState }) => {
     onSubmit: async (values) => {
       try {
         const response = await axios.post(
-          "http://localhost:8000/api/auth/register",
+          "https://two-factor-authentication-ttk6.onrender.com/api/auth/register",
           values
         );
         if (response) {
