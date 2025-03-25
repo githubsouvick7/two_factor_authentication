@@ -37,7 +37,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
       if (token) {
         try {
           const response = await axios.get(
-            "http://localhost:8000/api/auth/get-login-user",
+            "https://two-factor-authentication-ttk6.onrender.com/api/auth/get-login-user",
             {
               headers: { Authorization: `Bearer ${token}` },
             }
