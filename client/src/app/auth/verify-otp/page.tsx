@@ -84,7 +84,7 @@ function App() {
   const resendOtp = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/auth/resend-otp",
+        "https://two-factor-authentication-ttk6.onrender.com/api/auth/resend-otp",
         JSON.stringify({ registrationId: localStorage.getItem("tempUserId") })
       );
       if (response) {
