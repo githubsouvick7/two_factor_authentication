@@ -2,10 +2,16 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { KeyRound } from "lucide-react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/userContext";
 import { toast } from "sonner";
+import { fetcher } from "@/lib/fetcher";
+import type { User } from "@/context/userContext";
+
+interface VerifyOtpResponse {
+  token: string;
+  user: User;
+}
 
 function App() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -64,17 +70,19 @@ function App() {
     setIsVerifying(false);
     const otpString = otp.join("");
     try {
-      const response = await axios.post(
-        "http://localhost:8000/api/auth/verify-otp",
+      const response = await fetcher<VerifyOtpResponse>(
+        "/api/auth/verify-otp",
+        "post",
         {
           otp: otpString,
           registrationId: localStorage.getItem("tempUserId"),
         }
       );
       if (response) {
-        localStorage.setItem("authToken", response.data.token);
+        console.log(response);
+        localStorage.setItem("authToken", response.token);
         router.push("/dashboard");
-        setUser(response.data.user);
+        setUser(response.user);
       }
     } catch {
       setError("Failed to verify OTP. Please try again.");
@@ -83,8 +91,9 @@ function App() {
 
   const resendOtp = async () => {
     try {
-      const response = await axios.post(
-        "https://two-factor-authentication-ttk6.onrender.com/api/auth/resend-otp",
+      const response = await fetcher(
+        "/api/auth/resend-otp",
+        "post",
         JSON.stringify({ registrationId: localStorage.getItem("tempUserId") })
       );
       if (response) {

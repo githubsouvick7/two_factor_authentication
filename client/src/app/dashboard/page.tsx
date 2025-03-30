@@ -14,7 +14,12 @@ const Page = () => {
       <p>You are logged in as a user.</p>
       <Button
         className="text-base py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-red-700 transition-all duration-300"
-        onClick={() => localStorage.removeItem("token")}
+        onClick={() => {
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("tempUserId");
+          toast("You have successfully logged out.");
+          window.location.href = "/";
+        }}
       >
         Logout
       </Button>

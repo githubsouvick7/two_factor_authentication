@@ -1,6 +1,6 @@
 "use client";
 
-import axios from "axios";
+import { fetcher } from "@/lib/fetcher";
 import React, {
   createContext,
   useContext,
@@ -9,11 +9,15 @@ import React, {
   useEffect,
 } from "react";
 
-interface User {
+export interface User {
   id: string;
   name: string;
   email: string;
   // Add other user properties as needed
+}
+
+interface UserResponse {
+  user: User;
 }
 
 interface UserContextType {
@@ -36,13 +40,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
       const token = localStorage.getItem("authToken");
       if (token) {
         try {
-          const response = await axios.get(
-            "https://two-factor-authentication-ttk6.onrender.com/api/auth/get-login-user",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
+          const response = await fetcher<UserResponse>(
+            "/api/auth/get-login-user"
           );
-          setUser(response.data.user);
+          setUser(response.user);
         } catch (error) {
           console.log("Failed to fetch user", error);
           setUser(null);

@@ -16,10 +16,14 @@ import { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import { fetcher } from "@/lib/fetcher";
 
 interface SignupPageProps {
   setState: React.Dispatch<React.SetStateAction<string>>;
+}
+
+interface RegistrationResponse {
+  registrationId: string;
 }
 
 const SignupPage: React.FC<SignupPageProps> = ({ setState }) => {
@@ -95,12 +99,14 @@ const SignupPage: React.FC<SignupPageProps> = ({ setState }) => {
     validationSchema,
     onSubmit: async (values) => {
       try {
-        const response = await axios.post(
-          "https://two-factor-authentication-ttk6.onrender.com/api/auth/register",
+        const response = await fetcher<RegistrationResponse>(
+          "/api/auth/register",
+          "post",
           values
         );
+
         if (response) {
-          localStorage.setItem("tempUserId", response.data.registrationId);
+          localStorage.setItem("tempUserId", response.registrationId);
           router.push("/auth/verify-otp");
         }
       } catch (error) {
