@@ -50,12 +50,10 @@ router.post("/register", async (req, res) => {
     console.log(req.body);
     const { name, email, phone, password } = req.body;
 
-    // Check if user already exists in database
     let existingUser = await User.findOne({ email });
     if (existingUser)
       return res.status(400).json({ message: "User already exists" });
 
-    // Check if there's a pending registration for this email
     let pendingUser = await TempUser.findOne({ email });
     if (pendingUser) {
       return res.status(400).json({
@@ -67,14 +65,11 @@ router.post("/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate OTP for verification
     const { otp, secret } = generateOTP();
     const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    // Generate a unique registration ID
     const registrationId = require("crypto").randomBytes(16).toString("hex");
 
-    // Store user data temporarily in TempUser collection
     const tempUser = new TempUser({
       registrationId,
       name,
@@ -88,7 +83,6 @@ router.post("/register", async (req, res) => {
 
     await tempUser.save();
 
-    // Send OTP to user's email
     await sendOTP(email, otp);
 
     res.status(201).json({
@@ -102,159 +96,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// router.post("/verify-otp", async (req, res) => {
-//   try {
-//     const { registrationId, otp } = req.body;
-
-//     console.log(registrationId, "registrationId");
-//     console.log(otp, "otp");
-
-//     // Find the pending registration
-//     const tempUser = await TempUser.findOne({ registrationId });
-
-//     console.log(tempUser);
-
-//     if (!tempUser) {
-//       return res.status(400).json({
-//         message: "Registration not found or expired. Please register again.",
-//       });
-//     }
-
-//     // Check if OTP is expired
-//     if (tempUser.otpExpires < new Date()) {
-//       await TempUser.findByIdAndDelete(tempUser._id);
-//       return res
-//         .status(400)
-//         .json({ message: "Verification code expired. Please register again." });
-//     }
-
-//     // Verify OTP
-//     const isValid = speakeasy.totp.verify({
-//       secret: tempUser.otpSecret,
-//       encoding: "base32",
-//       token: otp,
-//       digits: 6,
-//       step: 300, // 5 minutes
-//       window: 1, // Allow 1 step before and after current step
-//     });
-
-//     if (!isValid) {
-//       return res.status(400).json({ message: "Invalid verification code" });
-//     }
-
-//     // Create and save the verified user
-//     const user = new User({
-//       name: tempUser.name,
-//       email: tempUser.email,
-//       phone: tempUser.phone,
-//       password: tempUser.password,
-//       isVerified: true,
-//     });
-//     await user.save();
-
-//     // Remove from pending registrations
-//     await TempUser.findByIdAndDelete(tempUser._id);
-
-//     // Generate JWT token for authenticated session
-//     const token = jwt.sign(
-//       { id: user._id, role: user.role },
-//       process.env.JWT_SECRET,
-//       { expiresIn: "1d" }
-//     );
-
-//     res.json({
-//       message: "Registration completed successfully",
-//       token,
-//       user: {
-//         id: user._id,
-//         name: user.name,
-//         email: user.email,
-//         role: user.role,
-//       },
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// });
-
-router.post("/verify-otp", async (req, res) => {
-  try {
-    const { registrationId, otp } = req.body;
-
-    console.log(registrationId, "registrationId");
-    console.log(otp, "otp");
-
-    // Find the pending registration
-    const tempUser = await TempUser.findOne({ registrationId });
-
-    console.log(tempUser);
-
-    if (!tempUser) {
-      return res.status(400).json({
-        message: "Registration not found or expired. Please register again.",
-      });
-    }
-
-    // Check if OTP is expired
-    if (tempUser.otpExpires < new Date()) {
-      await TempUser.findByIdAndDelete(tempUser._id);
-      return res
-        .status(400)
-        .json({ message: "Verification code expired. Please register again." });
-    }
-
-    // Verify OTP
-    const isValid = speakeasy.totp.verify({
-      secret: tempUser.otpSecret,
-      encoding: "base32",
-      token: otp,
-      digits: 6,
-      step: 300,
-      window: 1,
-    });
-
-    if (!isValid) {
-      return res.status(400).json({ message: "Invalid verification code" });
-    }
-
-    // Create and save the verified user
-    const user = new User({
-      name: tempUser.name,
-      email: tempUser.email,
-      phone: tempUser.phone,
-      password: tempUser.password,
-      isVerified: true,
-    });
-    await user.save();
-
-    // await TempUser.findByIdAndDelete(tempUser._id);
-
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      console.error("JWT_SECRET is not defined in environment variables");
-      return res.status(500).json({ message: "Server configuration error" });
-    }
-
-    const token = jwt.sign({ id: user._id, role: user.role }, jwtSecret, {
-      expiresIn: "1d",
-    });
-
-    res.json({
-      message: "Registration completed successfully",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -280,7 +121,7 @@ router.post("/login", async (req, res) => {
 
     res.status(200).json({
       message: "Please verify with the code sent to your email",
-      userId: user._id,
+      registrationId: user._id,
     });
   } catch (error) {
     console.error(error);
@@ -288,18 +129,223 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/verify-login", async (req, res) => {
+// router.post("/verify-otp", async (req, res) => {
+//   try {
+//     const { registrationId, otp } = req.body;
+
+//     console.log(registrationId, "registrationId");
+//     console.log(otp, "otp");
+
+//     const tempUser = await TempUser.findOne({ registrationId });
+
+//     console.log(tempUser);
+
+//     if (!tempUser) {
+//       return res.status(400).json({
+//         message: "Registration not found or expired. Please register again.",
+//       });
+//     }
+
+//     if (tempUser.otpExpires < new Date()) {
+//       await TempUser.findByIdAndDelete(tempUser._id);
+//       return res
+//         .status(400)
+//         .json({ message: "Verification code expired. Please register again." });
+//     }
+
+//     // Verify OTP
+//     const isValid = speakeasy.totp.verify({
+//       secret: tempUser.otpSecret,
+//       encoding: "base32",
+//       token: otp,
+//       digits: 6,
+//       step: 300,
+//       window: 1,
+//     });
+
+//     if (!isValid) {
+//       return res.status(400).json({ message: "Invalid verification code" });
+//     }
+
+//     const user = new User({
+//       name: tempUser.name,
+//       email: tempUser.email,
+//       phone: tempUser.phone,
+//       password: tempUser.password,
+//       isVerified: true,
+//     });
+//     await user.save();
+
+//     await TempUser.findByIdAndDelete(tempUser._id);
+
+//     const jwtSecret = process.env.JWT_SECRET;
+//     if (!jwtSecret) {
+//       console.error("JWT_SECRET is not defined in environment variables");
+//       return res.status(500).json({ message: "Server configuration error" });
+//     }
+
+//     const token = jwt.sign({ id: user._id, role: user.role }, jwtSecret, {
+//       expiresIn: "1d",
+//     });
+
+//     res.json({
+//       message: "Registration completed successfully",
+//       token,
+//       user: {
+//         id: user._id,
+//         name: user.name,
+//         email: user.email,
+//         role: user.role,
+//       },
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// router.post("/verify-login", async (req, res) => {
+//   try {
+//     const { userId, otp } = req.body;
+//     const user = await User.findById(userId);
+
+//     if (!user) return res.status(400).json({ message: "User not found" });
+
+//     // Check if OTP is expired
+//     if (user.otpExpires < new Date()) {
+//       return res
+//         .status(400)
+//         .json({ message: "Verification code expired. Please login again." });
+//     }
+
+//     // Verify OTP
+//     const isValid = speakeasy.totp.verify({
+//       secret: user.otpSecret,
+//       encoding: "base32",
+//       token: otp,
+//       digits: 6,
+//       step: 300, // 5 minutes
+//       window: 1, // Allow 1 step before and after current step
+//     });
+
+//     if (!isValid) {
+//       return res.status(400).json({ message: "Invalid verification code" });
+//     }
+
+//     // Mark user as verified for this session
+//     user.isVerified = true;
+//     await user.save();
+
+//     // Generate JWT token for authenticated session
+//     const token = jwt.sign(
+//       { id: user._id, role: user.role },
+//       process.env.JWT_SECRET,
+//       { expiresIn: "1d" }
+//     );
+
+//     res.json({
+//       message: "Login successful",
+//       token,
+//       user: {
+//         id: user._id,
+//         name: user.name,
+//         email: user.email,
+//         role: user.role,
+//       },
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// router.post("/resend-otp", async (req, res) => {
+//   try {
+//     // Check if it's for registration or login
+//     const { registrationId, userId } = req.body;
+
+//     if (registrationId) {
+//       // Resend for registration
+//       const tempUser = await TempUser.findOne({ registrationId });
+//       if (!tempUser) {
+//         return res.status(400).json({
+//           message: "Registration not found or expired. Please register again.",
+//         });
+//       }
+
+//       // Generate new OTP
+//       const { otp, secret } = generateOTP();
+//       const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+//       // Update the temp user
+//       tempUser.otpSecret = secret;
+//       tempUser.otpExpires = otpExpires;
+//       await tempUser.save();
+
+//       // Send OTP to user's email
+//       await sendOTP(tempUser.email, otp);
+
+//       res.status(200).json({
+//         message: "New verification code sent to your email",
+//         registrationId,
+//       });
+//     } else if (userId) {
+//       // Resend for login
+//       const user = await User.findById(userId);
+//       if (!user) return res.status(400).json({ message: "User not found" });
+
+//       // Generate new OTP
+//       const { otp, secret } = generateOTP();
+//       const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+//       // Update user with new OTP data
+//       user.otpSecret = secret;
+//       user.otpExpires = otpExpires;
+//       await user.save();
+
+//       // Send OTP to user's email
+//       await sendOTP(user.email, otp);
+
+//       res.status(200).json({
+//         message: "New verification code sent to your email",
+//         userId: user._id,
+//       });
+//     } else {
+//       return res
+//         .status(400)
+//         .json({ message: "Missing registration ID or user ID" });
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+router.post("/verify-otp", async (req, res) => {
   try {
-    const { userId, otp } = req.body;
-    const user = await User.findById(userId);
+    const { registrationId, userId, otp } = req.body;
 
-    if (!user) return res.status(400).json({ message: "User not found" });
+    let user;
+    let isTempUser = false;
 
-    // Check if OTP is expired
+    if (registrationId) {
+      user = await TempUser.findOne({ registrationId });
+      isTempUser = true;
+    } else if (userId) {
+      user = await User.findById(userId);
+    }
+
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found or expired. Please try again.",
+      });
+    }
+
     if (user.otpExpires < new Date()) {
-      return res
-        .status(400)
-        .json({ message: "Verification code expired. Please login again." });
+      if (isTempUser) await TempUser.findByIdAndDelete(user._id);
+      return res.status(400).json({
+        message: "Verification code expired. Please request a new one.",
+      });
     }
 
     // Verify OTP
@@ -308,27 +354,38 @@ router.post("/verify-login", async (req, res) => {
       encoding: "base32",
       token: otp,
       digits: 6,
-      step: 300, // 5 minutes
-      window: 1, // Allow 1 step before and after current step
+      step: 300,
+      window: 1,
     });
 
     if (!isValid) {
       return res.status(400).json({ message: "Invalid verification code" });
     }
 
-    // Mark user as verified for this session
-    user.isVerified = true;
-    await user.save();
+    if (isTempUser) {
+      const newUser = new User({
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        password: user.password,
+        isVerified: true,
+      });
+      await newUser.save();
+      await TempUser.findByIdAndDelete(user._id);
+      user = newUser;
+    } else {
+      user.isVerified = true;
+      await user.save();
+    }
 
-    // Generate JWT token for authenticated session
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
-    res.json({
-      message: "Login successful",
+    return res.json({
+      message: "Verification successful",
       token,
       user: {
         id: user._id,
@@ -345,60 +402,37 @@ router.post("/verify-login", async (req, res) => {
 
 router.post("/resend-otp", async (req, res) => {
   try {
-    // Check if it's for registration or login
     const { registrationId, userId } = req.body;
 
+    let user;
+    let isTempUser = false;
+
     if (registrationId) {
-      // Resend for registration
-      const tempUser = await TempUser.findOne({ registrationId });
-      if (!tempUser) {
-        return res.status(400).json({
-          message: "Registration not found or expired. Please register again.",
-        });
-      }
-
-      // Generate new OTP
-      const { otp, secret } = generateOTP();
-      const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-
-      // Update the temp user
-      tempUser.otpSecret = secret;
-      tempUser.otpExpires = otpExpires;
-      await tempUser.save();
-
-      // Send OTP to user's email
-      await sendOTP(tempUser.email, otp);
-
-      res.status(200).json({
-        message: "New verification code sent to your email",
-        registrationId,
-      });
+      user = await TempUser.findOne({ registrationId });
+      isTempUser = true;
     } else if (userId) {
-      // Resend for login
-      const user = await User.findById(userId);
-      if (!user) return res.status(400).json({ message: "User not found" });
-
-      // Generate new OTP
-      const { otp, secret } = generateOTP();
-      const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-
-      // Update user with new OTP data
-      user.otpSecret = secret;
-      user.otpExpires = otpExpires;
-      await user.save();
-
-      // Send OTP to user's email
-      await sendOTP(user.email, otp);
-
-      res.status(200).json({
-        message: "New verification code sent to your email",
-        userId: user._id,
-      });
-    } else {
-      return res
-        .status(400)
-        .json({ message: "Missing registration ID or user ID" });
+      user = await User.findById(userId);
     }
+
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found or expired. Please try again.",
+      });
+    }
+
+    const { otp: newOtp, secret } = generateOTP();
+    const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+
+    user.otpSecret = secret;
+    user.otpExpires = otpExpires;
+    await user.save();
+
+    await sendOTP(user.email, newOtp);
+
+    return res.status(200).json({
+      message: "New verification code sent to your email",
+      id: isTempUser ? registrationId : userId,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -438,9 +472,6 @@ router.post("/logout", (req, res) => {
   res.json({ message: "Logout successful" });
 });
 
-// Optional: Scheduled task to clean up old temporary users
-// This can be run as a cron job if your hosting supports it
-// Or you can use a library like node-schedule
 router.get("/cleanup-temp-users", async (req, res) => {
   try {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
@@ -472,7 +503,6 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// Get Logged-in User Data
 router.get("/get-login-user", verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");

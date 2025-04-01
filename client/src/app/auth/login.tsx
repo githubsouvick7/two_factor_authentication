@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { fetcher } from "@/lib/fetcher";
 import {
   Eye,
   EyeOff,
@@ -11,17 +12,27 @@ import {
   Shield,
 } from "lucide-react";
 import { useState } from "react";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import { useRouter } from "next/navigation";
 
 interface LoginPageProps {
   setState: React.Dispatch<React.SetStateAction<string>>;
 }
 
+interface LoginResponse {
+  registrationId: string;
+}
+
 const LoginPage: React.FC<LoginPageProps> = ({ setState }) => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const togglePasswordVisibility = (): void => {
     setShowPassword((prev) => !prev);
   };
+
   return (
     <div className="w-full flex items-center justify-center p-4">
       <div className="w-full max-w-md fade-in">
@@ -37,81 +48,135 @@ const LoginPage: React.FC<LoginPageProps> = ({ setState }) => {
               Secure access to your account
             </p>
           </div>
-          <form className="space-y-6">
-            <div className="space-y-2">
-              <div className="relative">
-                <Mail className="absolute left-3 top-4 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  className="pl-10 h-12 text-base"
-                  required
-                />
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <div className="relative">
-                <LockKeyhole className="absolute left-3 top-4 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  className="pl-10 pr-10 h-12 text-base"
-                  required
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-4 text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={togglePasswordVisibility}
+          <Formik
+            initialValues={{ email: "", password: "" }}
+            validationSchema={Yup.object({
+              email: Yup.string()
+                .email("Invalid email")
+                .required("Email is required"),
+              password: Yup.string()
+                .min(6, "Must be at least 6 characters")
+                .required("Password is required"),
+            })}
+            onSubmit={async (values, { setSubmitting }) => {
+              try {
+                setError(null);
+                const response = await fetcher<LoginResponse>(
+                  "/api/auth/verify-login",
+                  "post",
+                  values
+                );
+                console.log("Login success:", response);
+                localStorage.setItem("tempUserId", response.registrationId);
+                router.push("/auth/verify-otp");
+              } catch (err: unknown) {
+                setError(
+                  err instanceof Error
+                    ? err.message
+                    : "An error occurred. Try again."
+                );
+              }
+              setSubmitting(false);
+            }}
+          >
+            {({ isSubmitting }) => (
+              <Form className="space-y-6">
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-4 h-4 w-4 text-muted-foreground" />
+                    <Field
+                      name="email"
+                      type="email"
+                      placeholder="Email"
+                      className="pl-10 h-12 text-base w-full"
+                      as={Input}
+                    />
+                  </div>
+                  <ErrorMessage
+                    name="email"
+                    component="div"
+                    className="text-red-500 text-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="relative">
+                    <LockKeyhole className="absolute left-3 top-4 h-4 w-4 text-muted-foreground" />
+                    <Field
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      className="pl-10 pr-10 h-12 text-base w-full"
+                      as={Input}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-4 text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={togglePasswordVisibility}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                  <ErrorMessage
+                    name="password"
+                    component="div"
+                    className="text-red-500 text-sm"
+                  />
+                </div>
+
+                {error && (
+                  <div className="text-red-500 text-sm text-center">
+                    {error}
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="remember"
+                      className="rounded text-primary focus:ring-primary"
+                    />
+                    <label
+                      htmlFor="remember"
+                      className="text-sm text-muted-foreground"
+                    >
+                      Remember me
+                    </label>
+                  </div>
+                  <a
+                    href="#"
+                    className="text-sm font-medium text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </a>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full text-base py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-300"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-            </div>
+                  {isSubmitting ? "Signing in..." : "Secure Sign in"}
+                </Button>
 
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="remember"
-                  className="rounded text-primary focus:ring-primary"
-                />
-                <label
-                  htmlFor="remember"
-                  className="text-sm text-muted-foreground"
-                >
-                  Remember me
-                </label>
-              </div>
-              <a
-                href="#"
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                Forgot password?
-              </a>
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full text-base py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-300"
-            >
-              Secure Sign in
-            </Button>
-
-            <div className="text-center text-sm text-muted-foreground">
-              Don`t have an account?{" "}
-              <button
-                onClick={() => setState("signup")}
-                className="font-medium text-primary hover:underline"
-              >
-                Sign up
-              </button>
-            </div>
-          </form>
+                <div className="text-center text-sm text-muted-foreground">
+                  Don`t have an account?{" "}
+                  <button
+                    onClick={() => setState("signup")}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    Sign up
+                  </button>
+                </div>
+              </Form>
+            )}
+          </Formik>
         </div>
 
         <div className="mt-6 text-center">
