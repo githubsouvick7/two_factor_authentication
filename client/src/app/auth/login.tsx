@@ -15,6 +15,7 @@ import { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useRouter } from "next/navigation";
+import { Flip, toast } from "react-toastify";
 
 interface LoginPageProps {
   setState: React.Dispatch<React.SetStateAction<string>>;
@@ -22,6 +23,7 @@ interface LoginPageProps {
 
 interface LoginResponse {
   registrationId: string;
+  message: string;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ setState }) => {
@@ -63,19 +65,26 @@ const LoginPage: React.FC<LoginPageProps> = ({ setState }) => {
               try {
                 setError(null);
                 const response = await fetcher<LoginResponse>(
-                  "/api/auth/verify-login",
+                  "/api/auth/login",
                   "post",
                   values
                 );
+                toast.success(response.message, {
+                  position: "top-right",
+                  autoClose: 5000,
+                  hideProgressBar: true,
+                  closeOnClick: false,
+                  pauseOnHover: true,
+                  draggable: true,
+                  progress: undefined,
+                  theme: "colored",
+                  transition: Flip,
+                });
                 console.log("Login success:", response);
                 localStorage.setItem("tempUserId", response.registrationId);
                 router.push("/auth/verify-otp");
               } catch (err: unknown) {
-                setError(
-                  err instanceof Error
-                    ? err.message
-                    : "An error occurred. Try again."
-                );
+                console.log(err);
               }
               setSubmitting(false);
             }}

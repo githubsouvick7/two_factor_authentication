@@ -52,7 +52,9 @@ router.post("/register", async (req, res) => {
 
     let existingUser = await User.findOne({ email });
     if (existingUser)
-      return res.status(400).json({ message: "User already exists" });
+      return res
+        .status(400)
+        .json({ message: "User already exists! please login" });
 
     let pendingUser = await TempUser.findOne({ email });
     if (pendingUser) {
@@ -106,17 +108,14 @@ router.post("/login", async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    // Generate new OTP for login
     const { otp, secret } = generateOTP();
-    const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
 
-    // Update user with new OTP data
     user.otpSecret = secret;
     user.otpExpires = otpExpires;
-    user.isVerified = false; // Reset verification status for this login session
+    user.isVerified = false;
     await user.save();
 
-    // Send OTP to user's email
     await sendOTP(email, otp);
 
     res.status(200).json({

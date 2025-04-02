@@ -1,6 +1,7 @@
 "use client";
 
 import axios, { AxiosRequestConfig, Method, AxiosError } from "axios";
+import { Flip, toast } from "react-toastify";
 
 // const BASE_URL = "https://two-factor-authentication-ttk6.onrender.com";
 const BASE_URL = "http://localhost:8000";
@@ -69,8 +70,20 @@ export const fetcher = async <T = unknown,>(
     return response.data;
   } catch (error: unknown) {
     console.log("API Call Error:", error);
-
     const axiosError = error as AxiosError<ApiResponse>;
+    if (axiosError.response?.data?.message) {
+      toast.error(axiosError.response.data.message, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        transition: Flip,
+      });
+    }
     const errorMessage =
       axiosError.response?.data?.message ||
       axiosError.response?.data ||

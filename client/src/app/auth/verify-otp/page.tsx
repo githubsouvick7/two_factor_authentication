@@ -4,13 +4,18 @@ import React, { useState, useRef, useEffect } from "react";
 import { KeyRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/userContext";
-import { toast } from "sonner";
 import { fetcher } from "@/lib/fetcher";
 import type { User } from "@/context/userContext";
+import { Flip, toast } from "react-toastify";
 
 interface VerifyOtpResponse {
   token: string;
   user: User;
+  message: string;
+}
+
+interface ResendOtpResponse {
+  message: string;
 }
 
 function App() {
@@ -80,6 +85,17 @@ function App() {
       );
       if (response) {
         console.log(response);
+        toast.success(response.message, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: true,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+          transition: Flip,
+        });
         localStorage.setItem("authToken", response.token);
         router.push("/dashboard");
         setUser(response.user);
@@ -91,18 +107,22 @@ function App() {
 
   const resendOtp = async () => {
     try {
-      const response = await fetcher(
+      const response = await fetcher<ResendOtpResponse>(
         "/api/auth/resend-otp",
         "post",
         JSON.stringify({ registrationId: localStorage.getItem("tempUserId") })
       );
       if (response) {
-        toast("Event has been created", {
-          description: "Sunday, December 03, 2023 at 9:00 AM",
-          action: {
-            label: "Undo",
-            onClick: () => console.log("Undo"),
-          },
+        toast.success(response.message, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: true,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+          transition: Flip,
         });
       }
     } catch {

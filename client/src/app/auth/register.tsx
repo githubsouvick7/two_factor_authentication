@@ -17,6 +17,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useRouter } from "next/navigation";
 import { fetcher } from "@/lib/fetcher";
+import { Flip, toast } from "react-toastify";
 
 interface SignupPageProps {
   setState: React.Dispatch<React.SetStateAction<string>>;
@@ -24,6 +25,7 @@ interface SignupPageProps {
 
 interface RegistrationResponse {
   registrationId: string;
+  message: string;
 }
 
 const SignupPage: React.FC<SignupPageProps> = ({ setState }) => {
@@ -106,10 +108,22 @@ const SignupPage: React.FC<SignupPageProps> = ({ setState }) => {
         );
 
         if (response) {
+          toast.success(response.message, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: true,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "colored",
+            transition: Flip,
+          });
+
           localStorage.setItem("tempUserId", response.registrationId);
           router.push("/auth/verify-otp");
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.log(error);
       }
     },
