@@ -12,7 +12,7 @@ app.get("/", (req, res) => {
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:3001", "https://two-factor-authentication-five.vercel.app"],
+    origin: ["http://localhost:3000", "http://localhost:3001", "https://two-factor-authentication-five.vercel.app", "https://two-factor-authentication-livid.vercel.app"],
     methods: "GET,POST,PUT,DELETE",
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
