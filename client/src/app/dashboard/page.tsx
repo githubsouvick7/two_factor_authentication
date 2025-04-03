@@ -59,6 +59,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ProfileDropdown } from "./profile-dropdown";
 
 // Mock data for chats
 const mockChats = [
@@ -213,7 +214,7 @@ const ChatPage = () => {
               <Users size={20} />
             </Button>
             <Button variant="ghost" size="icon">
-              <MoreVertical size={20} />
+              <ProfileDropdown/>
             </Button>
           </div>
         </div>
