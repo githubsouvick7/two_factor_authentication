@@ -3,8 +3,8 @@
 import axios, { AxiosRequestConfig, Method, AxiosError } from "axios";
 import { Flip, toast } from "react-toastify";
 
-// const BASE_URL = "https://two-factor-authentication-ttk6.onrender.com";
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "https://two-factor-authentication-ttk6.onrender.com";
+// const BASE_URL = "http://localhost:8000";
 
 interface ApiResponse<T = unknown> {
   data: T;

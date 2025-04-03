@@ -105,7 +105,7 @@ const mockChats = [
 ];
 
 // Mock messages for a selected chat
-const mockMessages = [
+const mockMessages: Message[] = [
   { id: 1, text: "Hey there!", time: "10:00 AM", sender: "them" },
   { id: 2, text: "Hi! How are you?", time: "10:02 AM", sender: "me" },
   {
@@ -195,18 +195,8 @@ const ChatPage = () => {
     setMessages([...messages, newMsg]);
     setNewMessage("");
 
-    // Update the last message in the chat list (in a real app, this would be handled by the backend)
-    // This is just for demo purposes
-    const updatedChats = mockChats.map((chat) =>
-      chat.id === selectedChat.id
-        ? {
-            ...chat,
-            lastMessage: `You: ${newMessage}`,
-            time: "Just now",
-            unread: 0,
-          }
-        : chat
-    );
+  
+    
   };
 
   return (
@@ -252,7 +242,7 @@ const ChatPage = () => {
               >
                 <div className="relative">
                   <Avatar className="h-12 w-12">
-                    <div className="bg-primary/10 text-primary flex items-center justify-center font-medium h-full text-lg">
+                    <div className=" flex items-center justify-center font-medium h-full text-lg">
                       {chat.name.charAt(0)}
                     </div>
                   </Avatar>
